@@ -4550,7 +4550,7 @@ namespace ComponentFactory.Krypton.Toolkit
         [RefreshProperties(RefreshProperties.Repaint)]
         public ComboBoxStyle DropDownStyle
         {
-            get 
+            get
             {
                 if (ComboBoxCellTemplate == null)
                     throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
@@ -4594,7 +4594,7 @@ namespace ComponentFactory.Krypton.Toolkit
         [DefaultValue(8)]
         public int MaxDropDownItems
         {
-            get 
+            get
             {
                 if (ComboBoxCellTemplate == null)
                     throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
@@ -4639,7 +4639,7 @@ namespace ComponentFactory.Krypton.Toolkit
         [Browsable(true)]
         public int DropDownHeight
         {
-            get 
+            get
             {
                 if (ComboBoxCellTemplate == null)
                     throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
@@ -4683,7 +4683,7 @@ namespace ComponentFactory.Krypton.Toolkit
         [Browsable(true)]
         public int DropDownWidth
         {
-            get 
+            get
             {
                 if (ComboBoxCellTemplate == null)
                     throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
@@ -4870,6 +4870,75 @@ namespace ComponentFactory.Krypton.Toolkit
             }
         }
 
+        /// <summary>
+        /// Gets and sets the appearance and functionality of the KryptonComboBox.
+        /// </summary>
+        [Category("Data")]
+        [Description("Indicates the property to display for the items in this control.")]
+        [TypeConverter("System.Windows.Forms.Design.DataMemberFieldConverter, System.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")]
+        [Editor("System.Windows.Forms.Design.DataMemberFieldEditor, System.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", typeof(UITypeEditor))]
+        [DefaultValue("")]
+        public string ValueMember
+        {
+            get
+            {
+                if (ComboBoxCellTemplate == null)
+                    throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+
+                return ComboBoxCellTemplate.ValueMember;
+            }
+
+            set
+            {
+                if (ComboBoxCellTemplate == null)
+                    throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+
+                // Update the template cell so that subsequent cloned cells use the new value.
+                ComboBoxCellTemplate.ValueMember = value;
+                if (DataGridView != null)
+                {
+                    // Update all the existing KryptonDataGridViewComboBoxCell cells in the column accordingly.
+                    DataGridViewRowCollection dataGridViewRows = DataGridView.Rows;
+                    int rowCount = dataGridViewRows.Count;
+                    for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
+                    {
+                        // Be careful not to unshare rows unnecessarily. 
+                        // This could have severe performance repercussions.
+                        DataGridViewRow dataGridViewRow = dataGridViewRows.SharedRow(rowIndex);
+                        KryptonDataGridViewComboBoxCell dataGridViewCell = dataGridViewRow.Cells[Index] as KryptonDataGridViewComboBoxCell;
+                        if (dataGridViewCell != null)
+                            dataGridViewCell.SetValueMember(rowIndex, value);
+                    }
+                    DataGridView.InvalidateColumn(Index);
+                }
+            }
+        }
+
+        /// </summary>
+        [Category("Data")]
+        [Description("Indicates the Datasource for the items in this control.")]
+        [TypeConverter("System.Windows.Forms.Design.DataSourceConverter, System.Design")]
+        [Editor("System.Windows.Forms.Design.DataSourceListEditor, System.Design", typeof(UITypeEditor))]
+        public object DataSource
+        {
+            
+            get
+            {
+               if (ComboBoxCellTemplate == null)
+                    throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+
+                return ComboBoxCellTemplate.DataSource;
+            }
+
+            set
+            {
+                if (ComboBoxCellTemplate == null)
+                    throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+
+                // Update the template cell so that subsequent cloned cells use the new value.
+                ComboBoxCellTemplate.DataSource = value;
+            }
+        }
         #endregion
 
         #region Private
@@ -4894,7 +4963,7 @@ namespace ComponentFactory.Krypton.Toolkit
     /// <summary>
     /// Defines a KryptonComboBox cell type for the KryptonDataGridView control
     /// </summary>
-    public class KryptonDataGridViewComboBoxCell : DataGridViewTextBoxCell
+    public class KryptonDataGridViewComboBoxCell : DataGridViewComboBoxCell
     {
         #region Static Fields
         [ThreadStatic]
@@ -4991,6 +5060,7 @@ namespace ComponentFactory.Krypton.Toolkit
                 dataGridViewCell.AutoCompleteSource = AutoCompleteSource;
                 dataGridViewCell.DisplayMember = DisplayMember;
                 dataGridViewCell.ValueMember = ValueMember;
+                dataGridViewCell.DataSource = DataSource;
             }
             return dataGridViewCell;
         }
@@ -5055,7 +5125,7 @@ namespace ComponentFactory.Krypton.Toolkit
         /// The DropDownWidth property replicates the one from the KryptonComboBox control
         /// </summary>
         [DefaultValue(121)]
-        public int DropDownWidth
+        public override int DropDownWidth
         {
             get { return _dropDownWidth; }
 
@@ -5106,41 +5176,6 @@ namespace ComponentFactory.Krypton.Toolkit
         }
 
         /// <summary>
-        /// The DisplayMember property replicates the one from the KryptonComboBox control
-        /// </summary>
-        [DefaultValue("")]
-        public string DisplayMember
-        {
-            get { return _displayMember; }
-
-            set
-            {
-                if (_displayMember != value)
-                {
-                    SetDisplayMember(RowIndex, value);
-                    OnCommonChange();
-                }
-            }
-        }
-
-        /// <summary>
-        /// The ValueMember property replicates the one from the KryptonComboBox control
-        /// </summary>
-        [DefaultValue("")]
-        public string ValueMember
-        {
-            get { return _valueMember; }
-
-            set
-            {
-                if (_valueMember != value)
-                {
-                    SetValueMember(RowIndex, value);
-                    OnCommonChange();
-                }
-            }
-        }
-        /// <summary>
         /// DetachEditingControl gets called by the DataGridView control when the editing session is ending
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
@@ -5160,6 +5195,7 @@ namespace ComponentFactory.Krypton.Toolkit
                         bs.Click -= new EventHandler(OnButtonClick);
                     comboBox.ButtonSpecs.Clear();
                 }
+                comboBox.DataSource = null;
             }
 
             base.DetachEditingControl();
@@ -5183,20 +5219,22 @@ namespace ComponentFactory.Krypton.Toolkit
                 if (comboColumn != null)
                 {
                     // Convert collection of strings to an array
-                    object[] strings = new object[comboColumn.Items.Count];
-                    for (int i = 0; i < strings.Length; i++)
-                        strings[i] = comboColumn.Items[i];
+                    if (comboColumn.DataSource == null)
+                    {
+                        object[] strings = new object[comboColumn.Items.Count];
+                        for (int i = 0; i < strings.Length; i++)
+                            strings[i] = comboColumn.Items[i];
 
-                    comboBox.Items.Clear();
-                    comboBox.Items.AddRange(strings);
+                        comboBox.Items.Clear();
+                        comboBox.Items.AddRange(strings);
 
-                    string[] autoAppend = new string[comboColumn.AutoCompleteCustomSource.Count];
-                    for (int j = 0; j < autoAppend.Length; j++)
-                        autoAppend[j] = comboColumn.AutoCompleteCustomSource[j];
+                        string[] autoAppend = new string[comboColumn.AutoCompleteCustomSource.Count];
+                        for (int j = 0; j < autoAppend.Length; j++)
+                            autoAppend[j] = comboColumn.AutoCompleteCustomSource[j];
 
-                    comboBox.AutoCompleteCustomSource.Clear();
-                    comboBox.AutoCompleteCustomSource.AddRange(autoAppend);
-
+                        comboBox.AutoCompleteCustomSource.Clear();
+                        comboBox.AutoCompleteCustomSource.AddRange(autoAppend);
+                    }
                     // Set this cell as the owner of the buttonspecs
                     comboBox.ButtonSpecs.Clear();
                     comboBox.ButtonSpecs.Owner = DataGridView.Rows[rowIndex].Cells[ColumnIndex];
@@ -5213,9 +5251,10 @@ namespace ComponentFactory.Krypton.Toolkit
                 comboBox.MaxDropDownItems = MaxDropDownItems;
                 comboBox.AutoCompleteSource = AutoCompleteSource;
                 comboBox.AutoCompleteMode = AutoCompleteMode;
+                comboBox.DataSource = DataSource;
                 comboBox.DisplayMember = DisplayMember;
                 comboBox.ValueMember = ValueMember;
-
+                
                 string initialFormattedValueStr = initialFormattedValue as string;
                 if (initialFormattedValueStr == null)
                     comboBox.Text = string.Empty;
